@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Detection Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%231DB954'>😊</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (with development mode config) -->
+    <script>
+        // Disable Tailwind warning before loading CDN
+        window.__TAILWIND_DISABLE_WARNINGS__ = true;
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Animations -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    
+    <script>
+        // Configure Tailwind CSS
+        tailwind.config = {
+            mode: 'development',
+            corePlugins: {
+                preflight: true,
+            },
+            theme: {
+                extend: {
+                    colors: {
+                        spotify: '#1DB954',
+                        'dark-bg': '#121212',
+                        'dark-card': '#191414',
+                        'dark-input': '#282828',
+                        'dark-text': '#B3B3B3',
+                    },
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        };
+    </script>
+</head>
+<body class="font-inter bg-dark-bg text-white overflow-x-hidden">
+    
+    <!-- Fixed Animated Background -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-card to-dark-bg"></div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-spotify opacity-3 rounded-full blur-3xl animate-pulse-soft"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-spotify opacity-3 rounded-full blur-3xl animate-pulse-soft" style="animation-delay: 1.5s;"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="fixed left-0 top-0 w-64 h-screen bg-dark-card/95 backdrop-blur-sm border-r border-dark-input/30 shadow-2xl overflow-y-auto z-40 animate-fade-in-left">
+        
+        <!-- Logo -->
+        <div class="p-6 border-b border-dark-input/30">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-spotify to-spotify/70 bg-clip-text text-transparent font-montserrat">
+                🎭
+            </h1>
+            <p class="text-xs text-dark-text/70 mt-2 uppercase tracking-widest font-semibold">Mood Detection</p>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="p-4 space-y-2">
+            <button id="sidebarDashboard" 
+                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3">
+                <span class="text-xl">📊</span>
+                <span>Dashboard</span>
+            </button>
+            
+            <button id="sidebarChat" 
+                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3 relative">
+                <span class="text-xl">💬</span>
+                <span>Chat</span>
+                <div id="unreadDot" class="hidden absolute right-2 top-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            </button>
+            
+            <button id="sidebarSettings" 
+                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3">
+                <span class="text-xl">⚙️</span>
+                <span>Settings</span>
+            </button>
+
+            <div class="pt-4 mt-4 border-t border-dark-input/30">
+                <a href="{{ url_for('logout') }}" 
+                   class="w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 font-medium flex items-center gap-3">
+                    <span class="text-xl">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Floating Elements -->
+        <div class="absolute bottom-4 left-4 right-4 p-4 bg-gradient-to-r from-spotify/20 to-transparent rounded-lg border border-spotify/30 backdrop-blur-sm">
+            <p class="text-xs text-dark-text/70">💡 Tip: Let mood detection analyze your facial expression for better recommendations</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="ml-64 p-6 md:p-8 min-h-screen">
+        
+        <!-- Top Bar -->
+        <div class="flex items-center justify-between mb-10">
+            <div class="animate-fade-in-down">
+                <h2 class="text-3xl font-bold font-montserrat">Welcome Back! 👋</h2>
+                <p class="text-dark-text text-sm mt-1">Let's detect your mood and find the perfect music</p>
+            </div>
+
+            <!-- User Profile Button -->
+            <button id="openProfile" 
+                    class="stagger-item flex items-center gap-3 px-4 py-3 bg-dark-card/80 hover:bg-dark-input/80 border border-dark-input/50 rounded-2xl transition-all duration-300 hover-lift group cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-spotify to-spotify/70 flex items-center justify-center font-bold text-black text-sm group-hover:shadow-lg group-hover:shadow-spotify/50 transition-all">
+                    {{ username[0]|upper }}
+                </div>
+                <div class="text-left hidden sm:block">
+                    <p class="font-semibold text-sm">{{ username }}</p>
+                    <p class="text-xs text-dark-text/70">View Profile</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- Main Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            
+            <!-- Mood Detection Card -->
+            <div class="md:col-span-2 stagger-item">
+                <div class="bg-dark-card/80 border border-dark-input/30 rounded-3xl p-8 hover:border-spotify/50 transition-all duration-500 card-hover shadow-lg">
+                    <div class="flex items-start justify-between mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold font-montserrat mb-2">Detect Your Mood</h3>
+                            <p class="text-dark-text text-sm">Use your webcam to detect your emotional state</p>
+                        </div>
+                        <span class="text-4xl animate-bounce-soft">🎭</span>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-dark-input/50 to-dark-bg rounded-2xl p-6 mb-6 border border-spotify/20 hover:border-spotify/50 transition-all">
+                        <p class="text-dark-text text-sm mb-4">Click the button below to start the emotion detection process. Make sure your face is well-lit and clearly visible.</p>
+                        <div class="flex gap-2 text-xs text-dark-text/70">
+                            <span>📷 Webcam required</span>
+                            <span>•</span>
+                            <span>⚡ Real-time processing</span>
+                        </div>
+                    </div>
+
+                    <button id="detectMoodBtn" 
+                            class="w-full py-4 px-6 bg-gradient-to-r from-spotify to-spotify/80 hover:to-spotify text-black font-bold text-lg rounded-2xl shadow-lg hover-glow hover-lift transition-all duration-300 hover:shadow-spotify/50 active:scale-95">
+                        <span class="flex items-center justify-center gap-2">
+                            Start Mood Detection
+                            <span>→</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats Card -->
+            <div class="stagger-item">
+                <div class="bg-dark-card/80 border border-dark-input/30 rounded-3xl p-8 hover:border-spotify/50 transition-all duration-500 card-hover h-full flex flex-col shadow-lg">
+                    <h3 class="text-xl font-bold font-montserrat mb-6">Quick Stats</h3>
+                    
+                    <div class="flex-1 space-y-6">
+                        <div class="bg-gradient-to-br from-spotify/20 to-transparent rounded-2xl p-4 border border-spotify/30 shadow-sm">
+                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">User Name</p>
+                            <p class="text-lg font-semibold text-spotify">{{ username }}</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-blue-500/20 to-transparent rounded-2xl p-4 border border-blue-500/30 shadow-sm">
+                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">Email</p>
+                            <p class="text-sm font-semibold">{{ email if email != 'None' else 'Not set' }}</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-purple-500/20 to-transparent rounded-2xl p-4 border border-purple-500/30 shadow-sm">
+                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">Status</p>
+                            <p class="text-sm font-semibold flex items-center gap-2">
+                                <span class="w-2 h-2 bg-spotify rounded-full animate-pulse"></span>
+                                Online
+                            </p>
+                        </div>
+                    </div>
+
+                    <button id="openProfile" 
+                            class="mt-6 w-full py-2 px-4 border border-spotify/30 text-spotify rounded-xl hover:bg-spotify/10 transition-all duration-300 text-sm font-semibold hover-lift">
+                        View Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+let currentUsername = "{{ username }}";
+let currentEmail = "{{ email }}";
+let currentGender = "{{ gender }}";
+let currentAge = "{{ age }}";
+
+// ============================================================
+// MODAL MANAGEMENT
+// ============================================================
+
+function closeAllPopups() {
+  const modals = document.querySelectorAll('div[class*="modal"], div[class*="backdrop"]');
+  modals.forEach(modal => {
+    const video = modal ? modal.querySelector("video") : null;
+    if(video && video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+    }
+    if(modal) modal.remove();
+  });
+}
+
+function createPopup(title, innerHTML, extraClass = "") {
+  closeAllPopups();
+  
+  const backdrop = document.createElement("div");
+  backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
+  backdrop.addEventListener("click", (e) => {
+    if(e.target === backdrop) closeAllPopups();
+  });
+  
+ const modal = document.createElement("div");
+  modal.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-2xl w-11/12 backdrop-blur-sm animate-zoom-in-center ${extraClass}`;
+  
+  const header = document.createElement("div");
+  header.className = "flex items-center justify-between mb-6";
+  
+  const titleEl = document.createElement("h2");
+  titleEl.className = "text-2xl font-bold font-montserrat";
+  titleEl.textContent = title;
+  
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all duration-200 hover-lift";
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", closeAllPopups);
+  
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+  
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "modal-content space-y-4";
+  contentDiv.innerHTML = innerHTML;
+  
+  modal.appendChild(header);
+  modal.appendChild(contentDiv);
+  
+  document.body.appendChild(backdrop);
+  document.body.appendChild(modal);
+  
+  return modal;
+}
+
+// ============================================================
+// PROFILE MANAGEMENT
+// ============================================================
+
+document.getElementById("openProfile").addEventListener("click", () => {
+  createPopup("Your Profile", `
+    <div class="space-y-4">
+      <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
+        <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Username</p>
+        <p class="text-lg font-semibold">${currentUsername}</p>
+      </div>
+      
+      <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
+        <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Email</p>
+        <p class="text-lg font-semibold">${currentEmail || "Not set"}</p>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
+          <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Gender</p>
+          <p class="text-lg font-semibold">${currentGender || "Not set"}</p>
+        </div>
+        
+        <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
+          <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Age</p>
+          <p class="text-lg font-semibold">${currentAge || "Not set"}</p>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-dark-input/30">
+        <button id="editProfileBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all">
+          Edit Profile
+        </button>
+      </div>
+    </div>
+  `, "medium");
+
+  document.getElementById("editProfileBtn").addEventListener("click", () => {
+    const modal = createPopup("Edit Profile", `
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Email</label>
+          <input type="email" id="settingsEmail" value="${currentEmail}" placeholder="Enter email" 
+                 class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus">
+        </div>
+        
+        <div>
+          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Gender</label>
+          <select id="settingsGender" class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus cursor-pointer">
+            <option value="${currentGender || ''}">${currentGender || 'Select gender'}</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Age</label>
+          <input type="number" id="settingsAge" value="${currentAge}" placeholder="Enter age" min="13" max="120"
+                 class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus">
+        </div>
+
+        <button id="saveSettingsBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all mt-6">
+          Save Changes
+        </button>
+      </div>
+    `, "medium");
+
+    document.getElementById("saveSettingsBtn").addEventListener("click", () => {
+      const email = document.getElementById("settingsEmail").value;
+      const gender = document.getElementById("settingsGender").value;
+      const age = document.getElementById("settingsAge").value;
+
+      fetch("/update_profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `email=${encodeURIComponent(email)}&gender=${encodeURIComponent(gender)}&age=${encodeURIComponent(age)}`
+      }).then(() => {
+        currentEmail = email;
+        currentGender = gender;
+        currentAge = age;
+        closeAllPopups();
+        
+        const successDiv = document.createElement("div");
+        successDiv.className = "fixed top-4 right-4 bg-spotify/20 border border-spotify text-spotify px-6 py-3 rounded-lg animate-fade-in-down font-semibold";
+        successDiv.textContent = "✓ Profile updated successfully!";
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => successDiv.remove(), 3000);
+      });
+    });
+  });
+});
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+document.getElementById("sidebarSettings").addEventListener("click", () => {
+  createPopup("Settings", `
+    <div class="space-y-6">
+      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
+        <h4 class="font-semibold mb-3">Notifications</h4>
+        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all">
+          <input type="checkbox" checked class="w-4 h-4 accent-spotify">
+          <span class="text-sm">Enable message notifications</span>
+        </label>
+      </div>
+
+      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
+        <h4 class="font-semibold mb-3">Privacy</h4>
+        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all">
+          <input type="checkbox" checked class="w-4 h-4 accent-spotify">
+          <span class="text-sm">Show online status</span>
+        </label>
+      </div>
+
+      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
+        <h4 class="font-semibold mb-3">Accessibility</h4>
+        <p class="text-sm text-dark-text/70">Reduce motion for animations</p>
+        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all mt-2">
+          <input type="checkbox" class="w-4 h-4 accent-spotify">
+          <span class="text-sm">Enable reduced motion</span>
+        </label>
+      </div>
+    </div>
+  `, "medium");
+});
+
+// ============================================================
+// CHAT
+// ============================================================
+
+function showUnreadDot(flag) {
+  const dot = document.getElementById("unreadDot");
+  if (flag) {
+    dot.classList.remove("hidden");
+  } else {
+    dot.classList.add("hidden");
+  }
+}
+
+document.getElementById("sidebarChat").addEventListener("click", () => {
+  showUnreadDot(false);
+
+  const modal = createPopup("Messages", `
+    <div class="flex h-96 gap-4">
+      <!-- Users List Sidebar -->
+      <div class="w-40 border-r border-dark-input/50 overflow-y-auto">
+        <div id="users-list" class="space-y-1">
+          <p class="text-dark-text/50 text-xs text-center py-4">Loading users...</p>
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="flex-1 flex flex-col">
+        <div id="chat-header" class="pb-4 border-b border-dark-input/50 mb-4">
+          <p class="text-sm text-dark-text/70">Select a user to start chatting</p>
+        </div>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 mb-4">
+          <p class="text-dark-text/50 text-sm text-center py-8">No messages yet</p>
+        </div>
+
+        <div class="flex gap-2">
+          <input type="text" id="chat-input" placeholder="Type a message..." 
+                 class="flex-1 px-4 py-2 bg-dark-input/50 border border-dark-input rounded-xl input-focus placeholder-dark-text/50 text-sm">
+          <button id="chat-send" class="px-6 py-2 bg-spotify text-black font-bold rounded-xl hover-glow transition-all text-sm">
+            ↑
+          </button>
+        </div>
+      </div>
+    </div>
+  `, "max-w-4xl");
+
+  const usersList = modal.querySelector("#users-list");
+  const chatBox = modal.querySelector("#chat-box");
+  const chatHeader = modal.querySelector("#chat-header");
+  const chatInput = modal.querySelector("#chat-input");
+  const sendBtn = modal.querySelector("#chat-send");
+  let currentChatUser = null;
+  let unreadCount = {};
+
+  function formatTime(timestamp) {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
+
+  function loadChatUsers() {
+    fetch("/users/list", { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(users => {
+        usersList.innerHTML = users.map(u => `
+          <div class="user-item cursor-pointer px-3 py-2 rounded-lg hover:bg-dark-input/50 transition-all" data-user="${u}">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-white truncate">${u}</span>
+              <span class="unread-badge hidden bg-spotify text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" data-user="${u}">1</span>
+            </div>
+          </div>
+        `).join("");
+        
+        usersList.querySelectorAll(".user-item").forEach(item => {
+          item.addEventListener("click", () => {
+            usersList.querySelectorAll(".user-item").forEach(i => i.classList.remove("bg-dark-input/70"));
+            item.classList.add("bg-dark-input/70");
+            currentChatUser = item.dataset.user;
+            item.querySelector(".unread-badge").classList.add("hidden");
+            unreadCount[currentChatUser] = 0;
+            chatHeader.innerHTML = `<p class="font-semibold text-sm">💬 ${currentChatUser}</p>`;
+            loadMessages();
+          });
+        });
+      });
+  }
+
+  function loadMessages() {
+    if (!currentChatUser) return;
+    fetch(`/chat/fetch?user=${currentChatUser}`, { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(msgs => {
+        chatBox.innerHTML = msgs.map((m) => {
+          const isSent = m.from === currentUsername;
+          const sideClass = isSent ? "justify-end" : "justify-start";
+          const msgClass = isSent ? "bg-spotify text-black" : "bg-dark-input/70 text-white";
+          const timeStr = formatTime(m.ts);
+          return `
+            <div class="flex ${sideClass} animate-fade-in-up">
+              <div class="max-w-xs">
+                <div class="${msgClass} px-4 py-2 rounded-2xl text-sm">
+                  ${m.text}
+                </div>
+                <p class="text-xs text-dark-text/50 mt-1 ${isSent ? 'text-right' : 'text-left'}">${timeStr}</p>
+              </div>
+            </div>
+          `;
+        }).join("");
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+  }
+
+  sendBtn.addEventListener("click", () => {
+    const text = chatInput.value.trim();
+    if (!text || !currentChatUser) {
+      return;
+    }
+    
+    fetch("/chat/send", {
+      method: "POST",
+      credentials: 'same-origin',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: currentChatUser, text })
+    }).then(() => {
+      chatInput.value = "";
+      chatInput.focus();
+      loadMessages();
+    });
+  });
+
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendBtn.click();
+  });
+
+  loadChatUsers();
+  setInterval(loadMessages, 2000);
+});
+
+// ============================================================
+// MOOD DETECTION & SONGS
+// ============================================================
+
+document.getElementById("detectMoodBtn").addEventListener("click", () => {
+  function startMoodFlow() {
+    closeAllPopups();
+    
+    const backdrop = document.createElement("div");
+    backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
+    
+    const modal = document.createElement("div");
+    modal.className = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-lg w-11/12 backdrop-blur-sm animate-zoom-in-center";
+    
+    modal.innerHTML = `
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold font-montserrat">Detect Your Mood</h2>
+        <button class="close-modal w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all">✕</button>
+      </div>
+      
+      <div id="camera-box" class="bg-dark-input/50 rounded-2xl overflow-hidden mb-6 border border-dark-input/50">
+        <video autoplay playsinline id="webcam-video" class="w-full aspect-video bg-black"></video>
+      </div>
+      
+      <button id="captureBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all mb-4">
+        📷 Capture Face
+      </button>
+      
+      <div id="mood-result"></div>
+    `;
+    
+    document.body.appendChild(backdrop);
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector(".close-modal");
+    const videoEl = modal.querySelector("#webcam-video");
+    const captureBtn = modal.querySelector("#captureBtn");
+    const moodResult = modal.querySelector("#mood-result");
+    const cameraBox = modal.querySelector("#camera-box");
+    let stream = null;
+
+    closeBtn.addEventListener("click", () => {
+      if(stream) stream.getTracks().forEach(t => t.stop());
+      backdrop.remove();
+      modal.remove();
+    });
+
+    backdrop.addEventListener("click", (e) => {
+      if(e.target === backdrop) {
+        if(stream) stream.getTracks().forEach(t => t.stop());
+        backdrop.remove();
+        modal.remove();
+      }
+    });
+
+    navigator.mediaDevices.getUserMedia({video: true})
+      .then(s => {
+        stream = s;
+        videoEl.srcObject = stream;
+
+        captureBtn.addEventListener("click", () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(videoEl, 0, 0);
+          const dataURL = canvas.toDataURL("image/jpeg");
+
+          if(stream) stream.getTracks().forEach(t => t.stop());
+
+          cameraBox.innerHTML = `<img src="${dataURL}" class="w-full animate-fade-in-up">`;
+          captureBtn.disabled = true;
+          captureBtn.classList.add('opacity-50');
+
+          fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({image: dataURL})
+          })
+          .then(r => r.json())
+          .then(res => {
+            if(!res.emotion || res.emotion === "No face detected") {
+              moodResult.innerHTML = `
+                <div class="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-center mb-4 animate-fade-in-up">
+                  ⚠️ No face detected. Please try again with better lighting.
+                </div>
+                <button id="retryBtn" class="w-full py-3 px-4 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-all font-semibold hover-lift">
+                  🔄 Retry
+                </button>
+              `;
+              document.getElementById("retryBtn").addEventListener("click", () => {
+                if(stream) stream.getTracks().forEach(t => t.stop());
+                backdrop.remove();
+                modal.remove();
+                startMoodFlow();
+              });
+            } else {
+              moodResult.innerHTML = `
+                <div class="bg-spotify/20 border border-spotify rounded-lg p-4 mb-4 text-center animate-fade-in-up">
+                  <p class="text-dark-text/70 text-sm mb-2">Your Mood</p>
+                  <p class="text-3xl font-bold text-spotify">${res.emotion}</p>
+                </div>
+                <button id="suggestBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all">
+                  🎵 Get Song Recommendations
+                </button>
+              `;
+              document.getElementById("suggestBtn").addEventListener("click", () => {
+                backdrop.remove();
+                modal.remove();
+                openSongPopup(res.emotion);
+              });
+            }
+          });
+        });
+      })
+      .catch(() => {
+        alert("Camera access denied. Please allow camera permissions.")
+        backdrop.remove();
+        modal.remove();
+      });
+  }
+  
+  startMoodFlow();
+});
+
+function openSongPopup(mood) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
+  
+  const modal = document.createElement("div");
+  modal.className = \"fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-2xl w-11/12 max-h-96 overflow-y-auto backdrop-blur-sm animate-zoom-in-center\";
+  
+  modal.innerHTML = `
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <p class="text-dark-text/70 text-sm">Your Detected Mood</p>
+        <h2 class="text-3xl font-bold font-montserrat text-spotify">${mood} 🎵</h2>
+      </div>
+      <button class="close-modal w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all">✕</button>
+    </div>
+    
+    <div id="song-grid" class="space-y-3 mb-4">
+      <p class="text-dark-text/50 text-center py-8 animate-pulse">🎵 Loading songs...</p>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(modal);
+
+  const closeBtn = modal.querySelector(".close-modal");
+  const songGrid = modal.querySelector("#song-grid");
+
+  closeBtn.addEventListener("click", () => {
+    backdrop.remove();
+    modal.remove();
+  });
+
+  backdrop.addEventListener("click", (e) => {
+    if(e.target === backdrop) {
+      backdrop.remove();
+      modal.remove();
+    }
+  });
+
+  fetch("/songs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({mood})
+  })
+  .then(r => r.json())
+  .then(res => {
+    if(!res.songs || res.songs.length === 0) {
+      songGrid.innerHTML = "<p class='text-dark-text/50 text-center py-8'>No songs found.</p>";
+      return;
+    }
+    
+    songGrid.innerHTML = res.songs.slice(0, 5).map((track, idx) => `
+      <div class="spotify-embed animate-fade-in-up" style="animation-delay: ${idx * 100}ms;">
+        <iframe src="${track.url}" width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" class="rounded-lg"></iframe>
+      </div>
+    `).join("");
+  });
+}
+
+// Sidebar navigation to dashboard
+document.getElementById("sidebarDashboard").addEventListener("click", () => {
+  window.scrollTo({top: 0, behavior: 'smooth'});
+});
+    </script>
+</body>
+</html>
