@@ -133,12 +133,12 @@ emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutr
 
 def detect_emotion_simple(frame):
     """
-    Simple emotion detection using facial feature analysis.
-    Works reliably without TensorFlow/TFLite.
+    Improved emotion detection using facial feature analysis.
+    Analyzes brightness, contrast, and texture patterns.
     """
     try:
         if face_cascade is None:
-            return random.choice(emotion_labels)
+            return "Neutral"
             
         # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if len(frame.shape) == 3 else frame
@@ -152,27 +152,55 @@ def detect_emotion_simple(frame):
         (x, y, w, h) = faces[0]
         face_roi = gray[y:y+h, x:x+w]
         
-        # Calculate features
+        # Calculate multiple features
         brightness = float(np.mean(face_roi))
         contrast = float(np.std(face_roi))
         
-        # Simple emotion logic based on brightness and contrast
-        if brightness > 115:  # Lowered from 140 for better detection
-            if contrast > 40:
-                return random.choice(["Happy", "Surprise"])
-            else:
-                return "Happy"
-        elif brightness < 85:
-            return random.choice(["Sad", "Angry"])
+        # Additional texture analysis
+        laplacian = cv2.Laplacian(face_roi, cv2.CV_64F)
+        texture_intensity = float(np.std(laplacian))
+        
+        # Split face into regions (upper/lower)
+        mid_h = h // 2
+        upper_half = face_roi[:mid_h, :]
+        lower_half = face_roi[mid_h:, :]
+        
+        upper_brightness = float(np.mean(upper_half))
+        lower_brightness = float(np.mean(lower_half))
+        brightness_diff = abs(upper_brightness - lower_brightness)
+        
+        # Emotion detection logic (deterministic, no randomness)
+        # Priority 1: Happy - Smiling! Moderate to high brightness, moderate contrast
+        if brightness > 100 and contrast < 55 and texture_intensity < 18:
+            return "Happy"
+        
+        # Priority 2: Angry - Dark, loud features, high texture from furrowed brows
+        elif brightness < 100 and contrast > 35 and texture_intensity > 18:
+            return "Angry"
+        
+        # Priority 3: Sad - Dark, low contrast, subdued features
+        elif brightness < 95 and contrast < 32:
+            return "Sad"
+        
+        # Priority 4: Surprise - Very bright, sharp features, high texture
+        elif brightness > 125 and contrast > 45 and texture_intensity > 18:
+            return "Surprise"
+        
+        # Priority 5: Fear - Medium-high brightness, very high contrast
+        elif brightness > 105 and contrast > 50:
+            return "Fear"
+        
+        # Priority 6: Disgust - Uneven facial features
+        elif brightness_diff > 15 and contrast > 30:
+            return "Disgust"
+        
+        # Priority 7: Neutral - Default for moderate features
         else:
-            if contrast > 35:
-                return random.choice(["Angry", "Surprise"])
-            else:
-                return "Neutral"
+            return "Neutral"
             
     except Exception as e:
-        logger.warning(f"Emotion detection error: {e}, returning random")
-        return random.choice(emotion_labels)
+        logger.warning(f"Emotion detection error: {e}")
+        return "Neutral"
 
 # ---------------------------
 # Spotify Setup
