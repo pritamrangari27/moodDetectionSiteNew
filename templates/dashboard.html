@@ -8,183 +8,542 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%231DB954'>😊</text></svg>">
     
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS (with development mode config) -->
-    <script>
-        // Disable Tailwind warning before loading CDN
-        window.__TAILWIND_DISABLE_WARNINGS__ = true;
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Custom Animations -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     
-    <script>
-        // Configure Tailwind CSS
-        tailwind.config = {
-            mode: 'development',
-            corePlugins: {
-                preflight: true,
-            },
-            theme: {
-                extend: {
-                    colors: {
-                        spotify: '#1DB954',
-                        'dark-bg': '#121212',
-                        'dark-card': '#191414',
-                        'dark-input': '#282828',
-                        'dark-text': '#B3B3B3',
-                    },
-                    fontFamily: {
-                        'montserrat': ['Montserrat', 'sans-serif'],
-                        'inter': ['Inter', 'sans-serif'],
-                    },
-                }
+    <style>
+        :root {
+            --color-spotify: #1DB954;
+            --color-dark-bg: #121212;
+            --color-dark-card: #191414;
+            --color-dark-input: #282828;
+            --color-dark-text: #B3B3B3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Montserrat', sans-serif;
+            background-color: var(--color-dark-bg);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Fixed Animated Background */
+        .bg-animated {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            background: linear-gradient(135deg, var(--color-dark-bg), var(--color-dark-card), var(--color-dark-bg));
+        }
+
+        .bg-animated::before,
+        .bg-animated::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .bg-animated::before {
+            top: 0;
+            right: 0;
+            width: 384px;
+            height: 384px;
+            background: rgba(29, 185, 84, 0.03);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .bg-animated::after {
+            bottom: 0;
+            left: 0;
+            width: 320px;
+            height: 320px;
+            background: rgba(29, 185, 84, 0.03);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 1.5s;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 256px;
+            background: rgba(25, 20, 20, 0.95);
+            backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(40, 40, 40, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 40;
+            transition: left 0.3s ease;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                left: -256px;
             }
-        };
-    </script>
+
+            .sidebar.show {
+                left: 0;
+            }
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding-left: 256px;
+            }
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 30;
+            display: none;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar-backdrop.show {
+                display: block;
+            }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar-logo {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(40, 40, 40, 0.3);
+        }
+
+        .sidebar-logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--color-spotify), rgba(29, 185, 84, 0.7));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .sidebar-logo p {
+            font-size: 0.65rem;
+            color: #ffffff;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            padding: 1rem;
+        }
+
+        .sidebar-nav .btn {
+            width: 100%;
+            text-align: left;
+            color: #ffffff;
+            background: transparent;
+            border: none;
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-nav .btn:hover {
+            color: var(--color-spotify);
+            background: rgba(29, 185, 84, 0.1);
+        }
+
+        .sidebar-nav .btn span:first-child {
+            font-size: 1.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1.5rem 1rem;
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+            }
+        }
+
+        /* Cards */
+        .card-custom {
+            background: rgba(25, 20, 20, 0.8);
+            border: 1px solid rgba(40, 40, 40, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem 1.5rem;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+            height: 100%;
+        }
+
+        .card-custom:hover {
+            border-color: rgba(29, 185, 84, 0.5);
+        }
+
+        @media (max-width: 575.98px) {
+            .card-custom {
+                padding: 1rem;
+            }
+        }
+
+        /* Buttons */
+        .btn-spotify {
+            background: linear-gradient(135deg, var(--color-spotify), rgba(29, 185, 84, 0.8));
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(29, 185, 84, 0.3);
+        }
+
+        .btn-spotify:hover {
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(29, 185, 84, 0.4);
+        }
+
+        .btn-spotify:active {
+            transform: scale(0.95);
+        }
+
+        .btn-outline-spotify {
+            border: 2px solid var(--color-spotify);
+            color: var(--color-spotify);
+            background: transparent;
+            font-weight: 700;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-spotify:hover {
+            background: var(--color-spotify);
+            color: #000;
+        }
+
+        .btn-outline-spotify:active {
+            transform: scale(0.95);
+        }
+
+        /* Forms */
+        .form-control-custom {
+            background: rgba(40, 40, 40, 0.4);
+            border: 1px solid rgba(40, 40, 40, 0.5);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-custom::placeholder {
+            color: rgba(179, 179, 179, 0.6);
+        }
+
+        .form-control-custom:hover {
+            border-color: rgba(29, 185, 84, 0.4);
+            background: rgba(40, 40, 40, 0.5);
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--color-spotify);
+            background: rgba(40, 40, 40, 0.6);
+            box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.15);
+            color: white;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-dark-input);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-spotify);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1ed760;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Bootstrap Text Color Overrides for Dark Theme */
+        .text-light {
+            color: #ffffff !important;
+        }
+
+        .text-muted {
+            color: #e0e0e0 !important;
+        }
+
+        small, .small {
+            color: #ffffff !important;
+        }
+
+        p {
+            color: #ffffff !important;
+        }
+
+        span {
+            color: inherit;
+        }
+
+        /* Animation keyframes for Tailwind */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes zoomInCenter {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Bootstrap utilities for remaining classes */
+        .space-y-1 > * + * {
+            margin-top: 0.25rem;
+        }
+
+        .flex-grow-1 {
+            flex-grow: 1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .gap-1 {
+            gap: 0.25rem;
+        }
+
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .w-5 {
+            width: 1.25rem;
+        }
+
+        .h-5 {
+            height: 1.25rem;
+        }
+
+        /* Success notification */
+        .alert-success-custom {
+            background: rgba(29, 185, 84, 0.2);
+            border-color: #1DB954;
+            color: #1DB954;
+        }
+
+        /* Custom form styling */
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #1DB954 !important;
+            box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25) !important;
+        }
+    </style>
 </head>
-<body class="font-inter bg-dark-bg text-white overflow-x-hidden">
+<body class="overflow-x-hidden md-overflow-hidden">
     
     <!-- Fixed Animated Background -->
-    <div class="fixed inset-0 -z-10">
-        <div class="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-card to-dark-bg"></div>
-        <div class="absolute top-0 right-0 w-96 h-96 bg-spotify opacity-3 rounded-full blur-3xl animate-pulse-soft"></div>
-        <div class="absolute bottom-0 left-0 w-80 h-80 bg-spotify opacity-3 rounded-full blur-3xl animate-pulse-soft" style="animation-delay: 1.5s;"></div>
-    </div>
+    <div class="bg-animated"></div>
 
     <!-- Sidebar Navigation -->
-    <aside class="fixed left-0 top-0 w-64 h-screen bg-dark-card/95 backdrop-blur-sm border-r border-dark-input/30 shadow-2xl overflow-y-auto z-40 animate-fade-in-left">
+    <aside id="sidebar" class="sidebar">
         
         <!-- Logo -->
-        <div class="p-6 border-b border-dark-input/30">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-spotify to-spotify/70 bg-clip-text text-transparent font-montserrat">
-                🎭
-            </h1>
-            <p class="text-xs text-dark-text/70 mt-2 uppercase tracking-widest font-semibold">Mood Detection</p>
+        <div class="sidebar-logo">
+            <h1><i class="fas fa-masks-theater"></i></h1>
+            <p>Mood Detection</p>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="p-4 space-y-2">
-            <button id="sidebarDashboard" 
-                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3">
-                <span class="text-xl">📊</span>
+        <nav class="sidebar-nav">
+            <button id="sidebarDashboard" class="btn">
+                <span><i class="fas fa-chart-line"></i></span>
                 <span>Dashboard</span>
             </button>
             
-            <button id="sidebarChat" 
-                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3 relative">
-                <span class="text-xl">💬</span>
+            <button id="sidebarChat" class="btn position-relative">
+                <span><i class="fas fa-comments"></i></span>
                 <span>Chat</span>
-                <div id="unreadDot" class="hidden absolute right-2 top-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span id="unreadDot" class="badge bg-danger position-absolute top-0 end-0" style="display: none;">●</span>
             </button>
+
+            <hr class="my-3 border-secondary">
             
-            <button id="sidebarSettings" 
-                    class="stagger-item w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-spotify hover:bg-spotify/10 transition-all duration-300 font-medium group flex items-center gap-3">
-                <span class="text-xl">⚙️</span>
-                <span>Settings</span>
-            </button>
-
-            <div class="pt-4 mt-4 border-t border-dark-input/30">
-                <a href="{{ url_for('logout') }}" 
-                   class="w-full text-left px-4 py-3 rounded-lg text-dark-text hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 font-medium flex items-center gap-3">
-                    <span class="text-xl">🚪</span>
-                    <span>Logout</span>
-                </a>
-            </div>
+            <a href="{{ url_for('logout') }}" class="btn text-danger">
+                <span><i class="fas fa-right-from-bracket"></i></span>
+                <span>Logout</span>
+            </a>
         </nav>
-
-        <!-- Floating Elements -->
-        <div class="absolute bottom-4 left-4 right-4 p-4 bg-gradient-to-r from-spotify/20 to-transparent rounded-lg border border-spotify/30 backdrop-blur-sm">
-            <p class="text-xs text-dark-text/70">💡 Tip: Let mood detection analyze your facial expression for better recommendations</p>
-        </div>
     </aside>
 
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <!-- Mobile Menu Toggle -->
+    <button id="mobileMenuToggle" class="btn btn-dark d-md-none position-fixed top-0 start-0 m-3 zindex-50" style="z-index: 50; width: 40px; height: 40px; padding: 0;">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
     <!-- Main Content Area -->
-    <main class="ml-64 p-6 md:p-8 min-h-screen">
+    <main class="main-content">
         
         <!-- Top Bar -->
-        <div class="flex items-center justify-between mb-10">
-            <div class="animate-fade-in-down">
-                <h2 class="text-3xl font-bold font-montserrat">Welcome Back! 👋</h2>
-                <p class="text-dark-text text-sm mt-1">Let's detect your mood and find the perfect music</p>
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 gap-sm-4 mb-3 mb-sm-5">
+            <div class="animate-fade-in-down flex-grow-1">
+                <h2 class="h3 h2-md fw-bold m-0 text-white" style="font-family: 'Montserrat', sans-serif;">Welcome Back! <i class="fas fa-wave-hand"></i></h2>
+                <p class="small text-white mt-1 m-0" style="color: #ffffff;">Let's detect your mood and find the perfect music</p>
             </div>
 
             <!-- User Profile Button -->
-            <button id="openProfile" 
-                    class="stagger-item flex items-center gap-3 px-4 py-3 bg-dark-card/80 hover:bg-dark-input/80 border border-dark-input/50 rounded-2xl transition-all duration-300 hover-lift group cursor-pointer">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-spotify to-spotify/70 flex items-center justify-center font-bold text-black text-sm group-hover:shadow-lg group-hover:shadow-spotify/50 transition-all">
+            <button id="openProfile" class="btn btn-outline-secondary d-flex align-items-center gap-2 px-3 text-decoration-none text-white">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-dark" style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--color-spotify), rgba(29, 185, 84, 0.7)); font-size: 0.75rem;">
                     {{ username[0]|upper }}
                 </div>
-                <div class="text-left hidden sm:block">
-                    <p class="font-semibold text-sm">{{ username }}</p>
-                    <p class="text-xs text-dark-text/70">View Profile</p>
+                <div class="d-none d-sm-block">
+                    <p class="fw-semibold small m-0 text-white">{{ username }}</p>
+                    <p class="text-light small m-0">View Profile</p>
                 </div>
             </button>
         </div>
 
         <!-- Main Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="row g-3 g-sm-4 mb-3 mb-sm-5">
             
             <!-- Mood Detection Card -->
-            <div class="md:col-span-2 stagger-item">
-                <div class="bg-dark-card/80 border border-dark-input/30 rounded-3xl p-8 hover:border-spotify/50 transition-all duration-500 card-hover shadow-lg">
-                    <div class="flex items-start justify-between mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold font-montserrat mb-2">Detect Your Mood</h3>
-                            <p class="text-dark-text text-sm">Use your webcam to detect your emotional state</p>
+            <div class="col-12 col-lg-8">
+                <div class="card-custom">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 mb-3 mb-sm-4">
+                        <div class="flex-grow-1">
+                            <h3 class="h4 fw-bold m-0 text-white" style="font-family: 'Montserrat', sans-serif;">Detect Your Mood</h3>
+                            <p class="small text-white m-0 mt-1" style="color: #ffffff;">Use your webcam to detect your emotional state</p>
                         </div>
-                        <span class="text-4xl animate-bounce-soft">🎭</span>
+                        <span class="fs-1 animate-bounce-soft"><i class="fas fa-masks-theater"></i></span>
                     </div>
 
-                    <div class="bg-gradient-to-br from-dark-input/50 to-dark-bg rounded-2xl p-6 mb-6 border border-spotify/20 hover:border-spotify/50 transition-all">
-                        <p class="text-dark-text text-sm mb-4">Click the button below to start the emotion detection process. Make sure your face is well-lit and clearly visible.</p>
-                        <div class="flex gap-2 text-xs text-dark-text/70">
-                            <span>📷 Webcam required</span>
-                            <span>•</span>
-                            <span>⚡ Real-time processing</span>
+                    <div class="p-3 p-sm-4 mb-3 mb-sm-4 rounded-3" style="background: linear-gradient(135deg, rgba(40,40,40,0.3), rgba(18,18,18,1)); border: 1px solid rgba(29, 185, 84, 0.2);">
+                        <p class="small text-white m-0 mb-2" style="color: #ffffff;">Click the button below to start the emotion detection process. Make sure your face is well-lit and clearly visible.</p>
+                        <div class="d-flex flex-column flex-sm-row gap-2 small text-white" style="color: #ffffff;">
+                            <span><i class="fas fa-camera me-1"></i>Webcam required</span>
+                            <span class="d-none d-sm-inline">•</span>
+                            <span><i class="fas fa-bolt me-1"></i>Real-time processing</span>
                         </div>
                     </div>
 
-                    <button id="detectMoodBtn" 
-                            class="w-full py-4 px-6 bg-gradient-to-r from-spotify to-spotify/80 hover:to-spotify text-black font-bold text-lg rounded-2xl shadow-lg hover-glow hover-lift transition-all duration-300 hover:shadow-spotify/50 active:scale-95">
-                        <span class="flex items-center justify-center gap-2">
+                    <button id="detectMoodBtn" class="btn btn-spotify w-100">
+                        <span class="d-flex align-items-center justify-content-center gap-2">
                             Start Mood Detection
-                            <span>→</span>
+                            <span><i class="fas fa-arrow-right"></i></span>
                         </span>
                     </button>
                 </div>
             </div>
 
             <!-- Quick Stats Card -->
-            <div class="stagger-item">
-                <div class="bg-dark-card/80 border border-dark-input/30 rounded-3xl p-8 hover:border-spotify/50 transition-all duration-500 card-hover h-full flex flex-col shadow-lg">
-                    <h3 class="text-xl font-bold font-montserrat mb-6">Quick Stats</h3>
+            <div class="col-12 col-lg-4">
+                <div class="card-custom">
+                    <h3 class="h5 fw-bold mb-3 mb-sm-4 text-white" style="font-family: 'Montserrat', sans-serif;">Quick Stats</h3>
                     
-                    <div class="flex-1 space-y-6">
-                        <div class="bg-gradient-to-br from-spotify/20 to-transparent rounded-2xl p-4 border border-spotify/30 shadow-sm">
-                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">User Name</p>
-                            <p class="text-lg font-semibold text-spotify">{{ username }}</p>
+                    <div class="d-flex flex-column gap-2 gap-sm-4 mb-3 mb-sm-4">
+                        <div class="p-3 rounded-2" style="background: linear-gradient(135deg, rgba(29, 185, 84, 0.2), transparent); border: 1px solid rgba(29, 185, 84, 0.3);">
+                            <p class="text-white text-uppercase small m-0 fw-semibold" style="color: #ffffff;">User Name</p>
+                            <p class="h6 fw-bold text-white m-0 mt-1" style="color: var(--color-spotify);">{{ username }}</p>
                         </div>
 
-                        <div class="bg-gradient-to-br from-blue-500/20 to-transparent rounded-2xl p-4 border border-blue-500/30 shadow-sm">
-                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">Email</p>
-                            <p class="text-sm font-semibold">{{ email if email != 'None' else 'Not set' }}</p>
+                        <div class="p-3 rounded-2" style="background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), transparent); border: 1px solid rgba(0, 123, 255, 0.3);">
+                            <p class="text-white text-uppercase small m-0 fw-semibold" style="color: #ffffff;">Email</p>
+                            <p class="small fw-semibold m-0 mt-1 text-white" style="color: #ffffff;">{{ email if email != 'None' else 'Not set' }}</p>
                         </div>
 
-                        <div class="bg-gradient-to-br from-purple-500/20 to-transparent rounded-2xl p-4 border border-purple-500/30 shadow-sm">
-                            <p class="text-dark-text text-xs uppercase tracking-wider mb-2">Status</p>
-                            <p class="text-sm font-semibold flex items-center gap-2">
-                                <span class="w-2 h-2 bg-spotify rounded-full animate-pulse"></span>
-                                Online
+                        <div class="p-3 rounded-2" style="background: linear-gradient(135deg, rgba(102, 16, 242, 0.2), transparent); border: 1px solid rgba(102, 16, 242, 0.3);">
+                            <p class="text-white text-uppercase small m-0 fw-semibold" style="color: #ffffff;">Status</p>
+                            <p class="small fw-semibold m-0 mt-1 text-white" style="color: #ffffff;">
+                                <span class="badge bg-success me-1">●</span>
+                                <span>Online</span>
                             </p>
                         </div>
                     </div>
 
-                    <button id="openProfile" 
-                            class="mt-6 w-full py-2 px-4 border border-spotify/30 text-spotify rounded-xl hover:bg-spotify/10 transition-all duration-300 text-sm font-semibold hover-lift">
+                    <button id="openProfile" class="btn btn-outline-spotify w-100 small">
                         View Profile
                     </button>
                 </div>
@@ -195,9 +554,9 @@
     <!-- Modal Container -->
     <div id="modal-container"></div>
 
-    <!-- Modal Container -->
-    <div id="modal-container"></div>
-
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
 // ============================================================
 // CONFIGURATION
@@ -206,6 +565,49 @@ let currentUsername = "{{ username }}";
 let currentEmail = "{{ email }}";
 let currentGender = "{{ gender }}";
 let currentAge = "{{ age }}";
+
+// ============================================================
+// MOBILE MENU FUNCTIONALITY
+// ============================================================
+
+const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+const closeSidebar = document.getElementById("closeSidebar");
+const sidebar = document.getElementById("sidebar");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+function closeMobileMenu() {
+    sidebar.classList.add("-left-64");
+    sidebar.classList.remove("left-0");
+    sidebarBackdrop.classList.add("hidden");
+}
+
+function openMobileMenu() {
+    sidebar.classList.remove("-left-64");
+    sidebar.classList.add("left-0");
+    sidebarBackdrop.classList.remove("hidden");
+}
+
+mobileMenuToggle?.addEventListener("click", openMobileMenu);
+closeSidebar?.addEventListener("click", closeMobileMenu);
+sidebarBackdrop?.addEventListener("click", closeMobileMenu);
+
+// Close menu when clicking on a nav item
+document.querySelectorAll("#sidebar nav button, #sidebar a").forEach(item => {
+    item.addEventListener("click", (e) => {
+        if (e.target.id !== "detectMoodBtn") {
+            closeMobileMenu();
+        }
+    });
+});
+
+// Close menu when clicking outside on desktop
+document.addEventListener("click", (e) => {
+    if (window.innerWidth < 768) {  // Only on mobile
+        if (!sidebar?.contains(e.target) && !mobileMenuToggle?.contains(e.target)) {
+            closeMobileMenu();
+        }
+    }
+});
 
 // ============================================================
 // MODAL MANAGEMENT
@@ -226,35 +628,32 @@ function createPopup(title, innerHTML, extraClass = "") {
   closeAllPopups();
   
   const backdrop = document.createElement("div");
-  backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
-  backdrop.addEventListener("click", (e) => {
-    if(e.target === backdrop) closeAllPopups();
-  });
+  backdrop.className = "modal-backdrop fade show animate-fade-in";
+  backdrop.style.display = "block";
   
- const modal = document.createElement("div");
-  modal.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-2xl w-11/12 backdrop-blur-sm animate-zoom-in-center ${extraClass}`;
+  const modal = document.createElement("div");
+  modal.className = `modal fade show d-block animate-zoom-in-center ${extraClass}`;
+  modal.style.display = "block";
+  modal.setAttribute("tabindex", "-1");
   
-  const header = document.createElement("div");
-  header.className = "flex items-center justify-between mb-6";
+  modal.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+      <div class="modal-content" style="background: linear-gradient(135deg, #191414, #1a1a1a); border: 1px solid rgba(29, 185, 84, 0.2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7); border-radius: 0.75rem;">
+        <div class="modal-header" style="border-color: rgba(29, 185, 84, 0.2)!important; background: rgba(29, 185, 84, 0.05); border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem;">
+          <h5 class="modal-title fw-bold" style="font-family: 'Montserrat', sans-serif; color: #1DB954; font-size: 1.5rem;">${title}</h5>
+          <button type="button" class="btn-close btn-close-white" aria-label="Close" style="filter: brightness(2); width: 1.5rem; height: 1.5rem; background-size: 1rem; transition: all 0.2s ease;"></button>
+        </div>
+        <div class="modal-body" style="color: #B3B3B3; padding: 1.5rem;">
+          ${innerHTML}
+        </div>
+      </div>
+    </div>
+  `;
   
-  const titleEl = document.createElement("h2");
-  titleEl.className = "text-2xl font-bold font-montserrat";
-  titleEl.textContent = title;
-  
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all duration-200 hover-lift";
-  closeBtn.textContent = "✕";
+  const closeBtn = modal.querySelector(".btn-close");
   closeBtn.addEventListener("click", closeAllPopups);
   
-  header.appendChild(titleEl);
-  header.appendChild(closeBtn);
-  
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "modal-content space-y-4";
-  contentDiv.innerHTML = innerHTML;
-  
-  modal.appendChild(header);
-  modal.appendChild(contentDiv);
+  backdrop.addEventListener("click", closeAllPopups);
   
   document.body.appendChild(backdrop);
   document.body.appendChild(modal);
@@ -268,66 +667,67 @@ function createPopup(title, innerHTML, extraClass = "") {
 
 document.getElementById("openProfile").addEventListener("click", () => {
   createPopup("Your Profile", `
-    <div class="space-y-4">
-      <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
-        <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Username</p>
-        <p class="text-lg font-semibold">${currentUsername}</p>
-      </div>
-      
-      <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
-        <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Email</p>
-        <p class="text-lg font-semibold">${currentEmail || "Not set"}</p>
-      </div>
-      
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
-          <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Gender</p>
-          <p class="text-lg font-semibold">${currentGender || "Not set"}</p>
-        </div>
-        
-        <div class="bg-dark-input/50 rounded-xl p-4 border border-dark-input">
-          <p class="text-xs text-dark-text/70 uppercase tracking-wider mb-1">Age</p>
-          <p class="text-lg font-semibold">${currentAge || "Not set"}</p>
-        </div>
-      </div>
-
-      <div class="pt-4 border-t border-dark-input/30">
-        <button id="editProfileBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all">
-          Edit Profile
-        </button>
+    <div class="mb-4">
+      <div class="p-3 rounded" style="background: rgba(40, 40, 40, 0.5); border-left: 4px solid #1DB954; transition: all 0.3s ease;">
+        <p class="text-muted small mb-1" style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.75rem; color: #1DB954!important;">Username</p>
+        <p class="mb-0 fw-bold fs-5" style="color: #fff;">${currentUsername}</p>
       </div>
     </div>
+    
+    <div class="mb-4">
+      <div class="p-3 rounded" style="background: rgba(40, 40, 40, 0.5); border-left: 4px solid #1DB954; transition: all 0.3s ease;">
+        <p class="text-muted small mb-1" style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.75rem; color: #1DB954!important;">Email</p>
+        <p class="mb-0 fw-semibold" style="color: #fff;">${currentEmail || "Not set"}</p>
+      </div>
+    </div>
+    
+    <div class="row mb-4">
+      <div class="col-6 mb-3 mb-md-0">
+        <div class="p-3 rounded" style="background: rgba(40, 40, 40, 0.5); border-left: 4px solid #1DB954; transition: all 0.3s ease;">
+          <p class="text-muted small mb-1" style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.75rem; color: #1DB954!important;">Gender</p>
+          <p class="mb-0 fw-semibold" style="color: #fff;">${currentGender || "Not set"}</p>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="p-3 rounded" style="background: rgba(40, 40, 40, 0.5); border-left: 4px solid #1DB954; transition: all 0.3s ease;">
+          <p class="text-muted small mb-1" style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.75rem; color: #1DB954!important;">Age</p>
+          <p class="mb-0 fw-semibold" style="color: #fff;">${currentAge || "Not set"}</p>
+        </div>
+      </div>
+    </div>
+
+    <button id="editProfileBtn" class="btn btn-spotify w-100 fw-bold py-3" style="border-radius: 0.75rem; background: linear-gradient(135deg, #1DB954, rgba(29, 185, 84, 0.8)); border: none; box-shadow: 0 8px 15px rgba(29, 185, 84, 0.3); transition: all 0.3s ease;">
+      ✎ Edit Profile
+    </button>
   `, "medium");
 
   document.getElementById("editProfileBtn").addEventListener("click", () => {
     const modal = createPopup("Edit Profile", `
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Email</label>
-          <input type="email" id="settingsEmail" value="${currentEmail}" placeholder="Enter email" 
-                 class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus">
-        </div>
-        
-        <div>
-          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Gender</label>
-          <select id="settingsGender" class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus cursor-pointer">
-            <option value="${currentGender || ''}">${currentGender || 'Select gender'}</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        
-        <div>
-          <label class="text-xs font-semibold text-dark-text/70 uppercase tracking-wider block mb-2">Age</label>
-          <input type="number" id="settingsAge" value="${currentAge}" placeholder="Enter age" min="13" max="120"
-                 class="w-full px-4 py-3 bg-dark-input/50 border border-dark-input rounded-lg input-focus">
-        </div>
-
-        <button id="saveSettingsBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all mt-6">
-          Save Changes
-        </button>
+      <div class="mb-4">
+        <label class="form-label small fw-bold" style="text-transform: uppercase; letter-spacing: 1.5px; color: #1DB954;">Email</label>
+        <input type="email" id="settingsEmail" value="${currentEmail}" placeholder="Enter email" 
+               class="form-control" style="background-color: rgba(40, 40, 40, 0.6); border: 1px solid rgba(29, 185, 84, 0.3); color: #B3B3B3; border-radius: 0.5rem; padding: 0.75rem; transition: all 0.3s ease;">
       </div>
+      
+      <div class="mb-4">
+        <label class="form-label small fw-bold" style="text-transform: uppercase; letter-spacing: 1.5px; color: #1DB954;">Gender</label>
+        <select id="settingsGender" class="form-select" style="background-color: rgba(40, 40, 40, 0.6); border: 1px solid rgba(29, 185, 84, 0.3); color: #B3B3B3; border-radius: 0.5rem; padding: 0.75rem; transition: all 0.3s ease;">
+          <option value="${currentGender || ''}">${currentGender || 'Select gender'}</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label small fw-bold" style="text-transform: uppercase; letter-spacing: 1.5px; color: #1DB954;">Age</label>
+        <input type="number" id="settingsAge" value="${currentAge}" placeholder="Enter age" min="13" max="120"
+               class="form-control" style="background-color: rgba(40, 40, 40, 0.6); border: 1px solid rgba(29, 185, 84, 0.3); color: #B3B3B3; border-radius: 0.5rem; padding: 0.75rem; transition: all 0.3s ease;">
+      </div>
+
+      <button id="saveSettingsBtn" class="btn btn-spotify w-100 fw-bold py-3" style="background: linear-gradient(135deg, #1DB954, rgba(29, 185, 84, 0.8)); border-radius: 0.75rem; border: none; box-shadow: 0 8px 15px rgba(29, 185, 84, 0.3); transition: all 0.3s ease;">
+        ✓ Save Changes
+      </button>
     `, "medium");
 
     document.getElementById("saveSettingsBtn").addEventListener("click", () => {
@@ -346,8 +746,9 @@ document.getElementById("openProfile").addEventListener("click", () => {
         closeAllPopups();
         
         const successDiv = document.createElement("div");
-        successDiv.className = "fixed top-4 right-4 bg-spotify/20 border border-spotify text-spotify px-6 py-3 rounded-lg animate-fade-in-down font-semibold";
-        successDiv.textContent = "✓ Profile updated successfully!";
+        successDiv.className = "alert alert-success position-fixed";
+        successDiv.style.cssText = "top: 1rem; right: 1rem; z-index: 9999; background: rgba(29, 185, 84, 0.2); border-color: #1DB954; color: #1DB954;";
+        successDiv.innerHTML = "<i class='fas fa-check-circle me-2'></i> Profile updated successfully!";
         document.body.appendChild(successDiv);
         
         setTimeout(() => successDiv.remove(), 3000);
@@ -359,37 +760,6 @@ document.getElementById("openProfile").addEventListener("click", () => {
 // ============================================================
 // SETTINGS
 // ============================================================
-
-document.getElementById("sidebarSettings").addEventListener("click", () => {
-  createPopup("Settings", `
-    <div class="space-y-6">
-      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
-        <h4 class="font-semibold mb-3">Notifications</h4>
-        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all">
-          <input type="checkbox" checked class="w-4 h-4 accent-spotify">
-          <span class="text-sm">Enable message notifications</span>
-        </label>
-      </div>
-
-      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
-        <h4 class="font-semibold mb-3">Privacy</h4>
-        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all">
-          <input type="checkbox" checked class="w-4 h-4 accent-spotify">
-          <span class="text-sm">Show online status</span>
-        </label>
-      </div>
-
-      <div class="p-4 bg-dark-input/30 border border-dark-input/50 rounded-xl">
-        <h4 class="font-semibold mb-3">Accessibility</h4>
-        <p class="text-sm text-dark-text/70">Reduce motion for animations</p>
-        <label class="flex items-center gap-3 cursor-pointer hover:text-spotify transition-all mt-2">
-          <input type="checkbox" class="w-4 h-4 accent-spotify">
-          <span class="text-sm">Enable reduced motion</span>
-        </label>
-      </div>
-    </div>
-  `, "medium");
-});
 
 // ============================================================
 // CHAT
@@ -406,133 +776,8 @@ function showUnreadDot(flag) {
 
 document.getElementById("sidebarChat").addEventListener("click", () => {
   showUnreadDot(false);
-
-  const modal = createPopup("Messages", `
-    <div class="flex h-96 gap-4">
-      <!-- Users List Sidebar -->
-      <div class="w-40 border-r border-dark-input/50 overflow-y-auto">
-        <div id="users-list" class="space-y-1">
-          <p class="text-dark-text/50 text-xs text-center py-4">Loading users...</p>
-        </div>
-      </div>
-
-      <!-- Chat Area -->
-      <div class="flex-1 flex flex-col">
-        <div id="chat-header" class="pb-4 border-b border-dark-input/50 mb-4">
-          <p class="text-sm text-dark-text/70">Select a user to start chatting</p>
-        </div>
-
-        <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 mb-4">
-          <p class="text-dark-text/50 text-sm text-center py-8">No messages yet</p>
-        </div>
-
-        <div class="flex gap-2">
-          <input type="text" id="chat-input" placeholder="Type a message..." 
-                 class="flex-1 px-4 py-2 bg-dark-input/50 border border-dark-input rounded-xl input-focus placeholder-dark-text/50 text-sm">
-          <button id="chat-send" class="px-6 py-2 bg-spotify text-black font-bold rounded-xl hover-glow transition-all text-sm">
-            ↑
-          </button>
-        </div>
-      </div>
-    </div>
-  `, "max-w-4xl");
-
-  const usersList = modal.querySelector("#users-list");
-  const chatBox = modal.querySelector("#chat-box");
-  const chatHeader = modal.querySelector("#chat-header");
-  const chatInput = modal.querySelector("#chat-input");
-  const sendBtn = modal.querySelector("#chat-send");
-  let currentChatUser = null;
-  let unreadCount = {};
-
-  function formatTime(timestamp) {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    
-    if (isToday) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  }
-
-  function loadChatUsers() {
-    fetch("/users/list", { credentials: 'same-origin' })
-      .then(r => r.json())
-      .then(users => {
-        usersList.innerHTML = users.map(u => `
-          <div class="user-item cursor-pointer px-3 py-2 rounded-lg hover:bg-dark-input/50 transition-all" data-user="${u}">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-white truncate">${u}</span>
-              <span class="unread-badge hidden bg-spotify text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" data-user="${u}">1</span>
-            </div>
-          </div>
-        `).join("");
-        
-        usersList.querySelectorAll(".user-item").forEach(item => {
-          item.addEventListener("click", () => {
-            usersList.querySelectorAll(".user-item").forEach(i => i.classList.remove("bg-dark-input/70"));
-            item.classList.add("bg-dark-input/70");
-            currentChatUser = item.dataset.user;
-            item.querySelector(".unread-badge").classList.add("hidden");
-            unreadCount[currentChatUser] = 0;
-            chatHeader.innerHTML = `<p class="font-semibold text-sm">💬 ${currentChatUser}</p>`;
-            loadMessages();
-          });
-        });
-      });
-  }
-
-  function loadMessages() {
-    if (!currentChatUser) return;
-    fetch(`/chat/fetch?user=${currentChatUser}`, { credentials: 'same-origin' })
-      .then(r => r.json())
-      .then(msgs => {
-        chatBox.innerHTML = msgs.map((m) => {
-          const isSent = m.from === currentUsername;
-          const sideClass = isSent ? "justify-end" : "justify-start";
-          const msgClass = isSent ? "bg-spotify text-black" : "bg-dark-input/70 text-white";
-          const timeStr = formatTime(m.ts);
-          return `
-            <div class="flex ${sideClass} animate-fade-in-up">
-              <div class="max-w-xs">
-                <div class="${msgClass} px-4 py-2 rounded-2xl text-sm">
-                  ${m.text}
-                </div>
-                <p class="text-xs text-dark-text/50 mt-1 ${isSent ? 'text-right' : 'text-left'}">${timeStr}</p>
-              </div>
-            </div>
-          `;
-        }).join("");
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-  }
-
-  sendBtn.addEventListener("click", () => {
-    const text = chatInput.value.trim();
-    if (!text || !currentChatUser) {
-      return;
-    }
-    
-    fetch("/chat/send", {
-      method: "POST",
-      credentials: 'same-origin',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: currentChatUser, text })
-    }).then(() => {
-      chatInput.value = "";
-      chatInput.focus();
-      loadMessages();
-    });
-  });
-
-  chatInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendBtn.click();
-  });
-
-  loadChatUsers();
-  setInterval(loadMessages, 2000);
+  // Redirect to the full-featured chat page
+  window.location.href = "{{ url_for('chat') }}";
 });
 
 // ============================================================
@@ -544,26 +789,33 @@ document.getElementById("detectMoodBtn").addEventListener("click", () => {
     closeAllPopups();
     
     const backdrop = document.createElement("div");
-    backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
+    backdrop.className = "modal-backdrop fade show";
+    backdrop.style.display = "block";
     
     const modal = document.createElement("div");
-    modal.className = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-lg w-11/12 backdrop-blur-sm animate-zoom-in-center";
+    modal.className = "modal fade show d-block";
+    modal.style.display = "block";
     
     modal.innerHTML = `
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold font-montserrat">Detect Your Mood</h2>
-        <button class="close-modal w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all">✕</button>
+      <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content bg-dark animate-fade-in" style="background: linear-gradient(135deg, #191414, #1a1a1a); border: 1px solid rgba(29, 185, 84, 0.2); border-radius: 0.75rem;">
+          <div class="modal-header" style="background: rgba(29, 185, 84, 0.05); border-bottom: 2px solid rgba(29, 185, 84, 0.3); border-radius: 0.75rem 0.75rem 0 0;">
+            <h5 class="modal-title fw-bold" style="font-family: 'Montserrat', sans-serif; color: #1DB954; text-transform: uppercase; letter-spacing: 1.5px;">Detect Your Mood</h5>
+            <button type="button" class="btn-close btn-close-white close-modal" aria-label="Close" style="filter: brightness(2); width: 1.5rem; height: 1.5rem; background-size: 1rem;"></button>
+          </div>
+          <div class="modal-body">
+            <div id="camera-box" class="p-3 rounded mb-3 border" style="background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(29, 185, 84, 0.3)!important; border-radius: 0.75rem;">
+              <video autoplay playsinline id="webcam-video" class="w-100" style="background-color: black; border-radius: 0.5rem;"></video>
+            </div>
+            
+            <button id="captureBtn" class="btn w-100 fw-bold mb-3" style="background: linear-gradient(135deg, #1DB954, rgba(29, 185, 84, 0.8)); color: white; border: none; border-radius: 0.5rem; padding: 0.75rem; transition: all 0.3s ease;">
+              <i class="fas fa-camera me-2"></i>Capture Face
+            </button>
+            
+            <div id="mood-result"></div>
+          </div>
+        </div>
       </div>
-      
-      <div id="camera-box" class="bg-dark-input/50 rounded-2xl overflow-hidden mb-6 border border-dark-input/50">
-        <video autoplay playsinline id="webcam-video" class="w-full aspect-video bg-black"></video>
-      </div>
-      
-      <button id="captureBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all mb-4">
-        📷 Capture Face
-      </button>
-      
-      <div id="mood-result"></div>
     `;
     
     document.body.appendChild(backdrop);
@@ -605,7 +857,7 @@ document.getElementById("detectMoodBtn").addEventListener("click", () => {
 
           if(stream) stream.getTracks().forEach(t => t.stop());
 
-          cameraBox.innerHTML = `<img src="${dataURL}" class="w-full animate-fade-in-up">`;
+          cameraBox.innerHTML = `<img src="${dataURL}" class="w-100">`;
           captureBtn.disabled = true;
           captureBtn.classList.add('opacity-50');
 
@@ -618,11 +870,11 @@ document.getElementById("detectMoodBtn").addEventListener("click", () => {
           .then(res => {
             if(!res.emotion || res.emotion === "No face detected") {
               moodResult.innerHTML = `
-                <div class="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-center mb-4 animate-fade-in-up">
-                  ⚠️ No face detected. Please try again with better lighting.
+                <div class="alert alert-danger mb-3" style="background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.7); color: #ff6b6b; border-radius: 0.5rem;">
+                  <i class="fas fa-exclamation-triangle me-2"></i>No face detected. Please try again with better lighting.
                 </div>
-                <button id="retryBtn" class="w-full py-3 px-4 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-all font-semibold hover-lift">
-                  🔄 Retry
+                <button id="retryBtn" class="btn w-100 fw-bold" style="background: linear-gradient(135deg, #dc3545, rgba(220, 53, 69, 0.8)); color: white; border: none; border-radius: 0.5rem; transition: all 0.3s ease;">
+                  <i class="fas fa-redo me-2"></i>Retry
                 </button>
               `;
               document.getElementById("retryBtn").addEventListener("click", () => {
@@ -633,12 +885,12 @@ document.getElementById("detectMoodBtn").addEventListener("click", () => {
               });
             } else {
               moodResult.innerHTML = `
-                <div class="bg-spotify/20 border border-spotify rounded-lg p-4 mb-4 text-center animate-fade-in-up">
-                  <p class="text-dark-text/70 text-sm mb-2">Your Mood</p>
-                  <p class="text-3xl font-bold text-spotify">${res.emotion}</p>
+                <div class="alert mb-3" style="background: rgba(29, 185, 84, 0.15); border: 1px solid #1DB954; color: #fff; border-radius: 0.5rem; border-left: 4px solid #1DB954;">
+                  <p class="small mb-2" style="color: #B3B3B3; text-transform: uppercase; letter-spacing: 1px;">Your Mood</p>
+                  <p class="fs-3 fw-bold mb-0" style="color: #1DB954; font-family: 'Montserrat', sans-serif;">${res.emotion}</p>
                 </div>
-                <button id="suggestBtn" class="w-full py-3 px-4 bg-gradient-to-r from-spotify to-spotify/80 text-black font-bold rounded-lg hover-glow hover-lift transition-all">
-                  🎵 Get Song Recommendations
+                <button id="suggestBtn" class="btn w-100 fw-bold" style="background: linear-gradient(135deg, #1DB954, rgba(29, 185, 84, 0.8)); color: white; border: none; border-radius: 0.5rem; padding: 0.75rem; transition: all 0.3s ease;">
+                  <i class="fas fa-music me-2"></i>Get Song Recommendations
                 </button>
               `;
               document.getElementById("suggestBtn").addEventListener("click", () => {
@@ -662,22 +914,29 @@ document.getElementById("detectMoodBtn").addEventListener("click", () => {
 
 function openSongPopup(mood) {
   const backdrop = document.createElement("div");
-  backdrop.className = "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in";
+  backdrop.className = "modal-backdrop fade show";
+  backdrop.style.display = "block";
   
   const modal = document.createElement("div");
-  modal.className = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-card/95 border border-dark-input/50 rounded-3xl shadow-2xl z-50 p-8 max-w-2xl w-11/12 max-h-96 overflow-y-auto backdrop-blur-sm animate-zoom-in-center";
+  modal.className = "modal fade show d-block animate-fade-in";
+  modal.style.display = "block";
   
   modal.innerHTML = `
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <p class="text-dark-text/70 text-sm">Your Detected Mood</p>
-        <h2 class="text-3xl font-bold font-montserrat text-spotify">${mood} 🎵</h2>
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+      <div class="modal-content bg-dark animate-zoom-in-center" style="background: linear-gradient(135deg, #191414, #1a1a1a); border: 1px solid rgba(29, 185, 84, 0.2); border-radius: 0.75rem;">
+        <div class="modal-header" style="background: rgba(29, 185, 84, 0.05); border-bottom: 2px solid rgba(29, 185, 84, 0.3); border-radius: 0.75rem 0.75rem 0 0;">
+          <div>
+            <p class="small mb-2" style="color: #B3B3B3; text-transform: uppercase; letter-spacing: 1px;">Your Detected Mood</p>
+            <h5 class="modal-title fw-bold" style="font-family: 'Montserrat', sans-serif; color: #1DB954; font-size: 1.5rem;">${mood} <i class="fas fa-music"></i></h5>
+          </div>
+          <button type="button" class="btn-close btn-close-white close-modal" aria-label="Close" style="filter: brightness(2); width: 1.5rem; height: 1.5rem; background-size: 1rem;"></button>
+        </div>
+        <div class="modal-body" style="max-height: 50vh; overflow-y: auto; padding: 1rem;">
+          <div id="song-grid" class="space-y-2">
+            <p class="text-muted text-center py-4"><i class="fas fa-music me-2"></i>Loading songs...</p>
+          </div>
+        </div>
       </div>
-      <button class="close-modal w-10 h-10 rounded-full bg-dark-input/50 hover:bg-spotify/20 text-dark-text hover:text-spotify flex items-center justify-center font-bold transition-all">✕</button>
-    </div>
-    
-    <div id="song-grid" class="space-y-3 mb-4">
-      <p class="text-dark-text/50 text-center py-8 animate-pulse">🎵 Loading songs...</p>
     </div>
   `;
 
@@ -707,13 +966,13 @@ function openSongPopup(mood) {
   .then(r => r.json())
   .then(res => {
     if(!res.songs || res.songs.length === 0) {
-      songGrid.innerHTML = "<p class='text-dark-text/50 text-center py-8'>No songs found.</p>";
+      songGrid.innerHTML = "<p class='text-muted text-center py-4'>No songs found.</p>";
       return;
     }
     
     songGrid.innerHTML = res.songs.slice(0, 5).map((track, idx) => `
-      <div class="spotify-embed animate-fade-in-up" style="animation-delay: ${idx * 100}ms;">
-        <iframe src="${track.url}" width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" class="rounded-lg"></iframe>
+      <div class="d-flex mb-3" style="animation-delay: ${idx * 100}ms;">
+        <iframe src="${track.url}" width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" class="rounded" style="border: 1px solid rgba(29, 185, 84, 0.3);"></iframe>
       </div>
     `).join("");
   });

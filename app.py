@@ -365,6 +365,13 @@ def dashboard():
                            gender=user.gender or "None", 
                            age=user.age or "None")
 
+@app.route("/chat")
+@jwt_required()
+def chat():
+    """Serve the WhatsApp-style chat interface."""
+    username = get_jwt_identity()
+    return render_template("chat.html", username=username)
+
 @app.route("/update_profile", methods=["POST"])
 @jwt_required()
 def update_profile():
